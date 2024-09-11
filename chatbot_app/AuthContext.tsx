@@ -15,10 +15,11 @@ type AuthContextType = {
   user: User | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  fetchUserData: () => Promise<void>;
+  fetchUserData: () => Promise<void>; // ProfileScreen
   deleteAccount: () => Promise<void>;
 };
 
+// react의 context API를 통해 컴포넌트 트리 전체에 필요한 데이터를 관리하고 공유하는 AuthContext 생성
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -26,6 +27,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [userToken, setUserToken] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
 
+  // login 파트 - 이메일과 패스워드 받아서 서버에 요청
   const login = async (email: string, password: string) => {
     try {
       const response = await axios.post(`${CONFIG.API_URL}/login`, { email, password });
@@ -78,10 +80,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const deleteAccount = async () => {
     try {
+      // userToken 가져오는 부분
       const token = await AsyncStorage.getItem('userToken');
       if (!token) {
         throw new Error('No token available');
       }
+      // flask서버의 delete_account로 요청하는 부분
       await axios.delete(`${CONFIG.API_URL}/delete_account`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -92,6 +96,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // 저장된 사용자 데이터를 다른 부분에서 사용하기 위해 공유.
   return (
     <AuthContext.Provider value={{ isAuthenticated, userToken, user, login, logout, fetchUserData, deleteAccount }}>
       {children}
@@ -99,8 +104,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
+// 커스텀 훅 설정. useAuth로 호출
 export const useAuth = () => {
-  const context = useContext(AuthContext);
+  const context = useContext(AuthContext); // useContext : 컴포넌트 트리에 데이터 공유
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }

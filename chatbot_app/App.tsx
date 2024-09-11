@@ -13,25 +13,32 @@ import RegisterScreen from './RegisterScreen';
 import { AuthProvider, useAuth } from './AuthContext';
 
 // 네비게이션 파라미터 타입 정의
+// undefined = 파마리터를 안받는다.
 type RootStackParamList = {
   Auth: undefined;
   Main: undefined;
+  // chatdetail은 historyid를 무조건 받는다
   ChatDetail: { historyId: number };
 };
 
+// undefined를 사용하는 이유 : 파라미터가 없음을 명시, 네비게이션이 파라미터를 전달하지 못하도록 강제
 type AuthStackParamList = {
   Login: undefined;
   Register: undefined;
 };
 
 type MainTabParamList = {
-  Home: { startNewChat?: boolean };
-  History: { refresh?: number };
-  Profile: undefined;
+  // home과 History 화면은 선택적으로 (?:) 각각의 타입의 파라미터를 받는다.
+  Home: { startNewChat?: boolean }; // 새채팅
+  History: { refresh?: number }; // 새로고침
+  Profile: undefined; // 프로필 화면은 파라미터가 없다.
 };
 
+// 최상위 스택 네비게이터 생성
 const RootStack = createStackNavigator<RootStackParamList>();
+// 인증 화면 스택 네비게이터 생성
 const AuthStack = createStackNavigator<AuthStackParamList>();
+// 메인 화면 탭 네비게이터 생성
 const MainTab = createBottomTabNavigator<MainTabParamList>();
 
 function AuthScreens() {
@@ -105,7 +112,9 @@ function MainTabs() {
   );
 }
 
+// 앱의 전체 구조를 정의
 function AppNavigator() {
+  // 인증되지 않은 상태와 인증된 상태 확인하여 섹션 전환 - login 파트 혹은 홈 파트로의 전환
   const { isAuthenticated } = useAuth();
 
   return (
@@ -134,6 +143,7 @@ function AppNavigator() {
   );
 }
 
+// 모든 네비게이션 컴포넌트 포함하는 컨테이너 역할
 export default function App() {
   return (
     <AuthProvider>

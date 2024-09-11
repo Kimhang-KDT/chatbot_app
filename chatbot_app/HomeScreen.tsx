@@ -18,6 +18,7 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useAuth } from './AuthContext';
 
+// Massage 객체 타입 정의
 interface Message {
   id: string;
   text: string;
@@ -37,6 +38,7 @@ export default function HomeScreen() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  // historyId 초기화 - 기존대화 이어갈때는 setHistoryId()로 historyId 설정
   const [historyId, setHistoryId] = useState<number | null>(null);
   const { userToken, user } = useAuth();
   
@@ -50,11 +52,12 @@ export default function HomeScreen() {
   useEffect(() => {
     if (route.params?.startNewChat) {
       startNewChat();
-      // Reset the parameter
+      // 파라메터 리셋
       navigation.setParams({ startNewChat: undefined });
     }
   }, [route.params?.startNewChat, navigation]);
 
+  // AsyncStorage에서 저장된 히스토리ID 가져오는 부분
   const loadHistoryId = async () => {
     try {
       const savedHistoryId = await AsyncStorage.getItem('historyId');
@@ -66,6 +69,7 @@ export default function HomeScreen() {
     }
   };
 
+  // 받은 히스토리ID AsyncStorage에 저장하는 부분
   const saveHistoryId = async (id: number) => {
     try {
       await AsyncStorage.setItem('historyId', id.toString());
@@ -74,12 +78,15 @@ export default function HomeScreen() {
     }
   };
 
+  // 새 채팅시 초기화
   const startNewChat = async () => {
     setMessages([]);
     setHistoryId(null);
+    // 저장된 historyId 제거
     await AsyncStorage.removeItem('historyId');
   };
 
+  // 유저 -> 서버 질문
   const sendMessage = async () => {
     if (inputText.trim() === '') return;
 
@@ -89,10 +96,12 @@ export default function HomeScreen() {
       isUser: true,
     };
 
+    // 기존 메시지와 새 메시지
     setMessages((prevMessages) => [newMessage, ...prevMessages]);
     setInputText('');
     setIsLoading(true);
 
+    // 서버로 요청 및 응답 처리
     try {
       const response = await fetch(`${CONFIG.API_URL}/get_response`, {
         method: 'POST',
@@ -112,6 +121,7 @@ export default function HomeScreen() {
         throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
       }
 
+      // 응답 OK -> ai응답에 메시지 내용 추가
       const data = await response.json();
 
       const aiResponse: Message = {
@@ -120,9 +130,10 @@ export default function HomeScreen() {
         isUser: false,
       };
 
+      // 기존의 메시지 배열에 새로운 메시지를 첫번째로 배치. ... 그 뒤로 기존 메시지 펼쳐놓는 부분
       setMessages((prevMessages) => [aiResponse, ...prevMessages]);
 
-      // 새로운 historyId 저장
+      // 새로운 historyId 상태 업데이트 및 저장
       if (data.history_id) {
         const newHistoryId = parseInt(data.history_id, 10);
         setHistoryId(newHistoryId);
@@ -142,6 +153,7 @@ export default function HomeScreen() {
     }
   };
 
+  // 메시지 렌더링. user메시지와 ai메시지 나눠서 스타일링
   const renderMessage = ({ item }: { item: Message }) => (
     <View style={[styles.messageBubble, item.isUser ? styles.userMessage : styles.aiMessage]}>
       <Text style={styles.messageText}>{item.text}</Text>
@@ -155,9 +167,9 @@ export default function HomeScreen() {
     >
       <FlatList
         data={messages}
-        renderItem={renderMessage}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.messageList}
+        renderItem={renderMessage} // 각 메시지 항목 UI 변환
+        keyExtractor={(item) => item.id} // 고유 키 생성
+        contentContainerStyle={styles.messageList} // 메시지에 스타일 적용
         inverted
       />
       <View style={styles.inputContainer}>
