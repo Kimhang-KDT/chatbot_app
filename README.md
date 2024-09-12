@@ -16,3 +16,7 @@
 - Java Development Kit (JDK)
   - JDK 17
 - Android Studio
+
+## 실행
+
+npx expo start
