@@ -17,6 +17,10 @@
   - JDK 17
 - Android Studio
 
+## 프로젝트 생성
+
+npx create-expo-app myapp
+
 ## 실행
 
 npx expo start
